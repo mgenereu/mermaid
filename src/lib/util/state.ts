@@ -97,6 +97,12 @@ export const updateCode = (code: string, updateEditor: boolean, updateDiagram = 
 	});
 };
 
+export const updateStyle = (style: string, updateEditor: boolean): void => {
+	codeStore.update((state) => {
+		return { ...state, style, updateEditor };
+	});
+};
+
 export const updateConfig = (config: string, updateEditor: boolean): void => {
 	codeStore.update((state) => {
 		return { ...state, mermaid: config, updateEditor };

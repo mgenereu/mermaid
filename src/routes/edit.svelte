@@ -6,7 +6,13 @@
 	import View from '$lib/components/view.svelte';
 	import Card from '$lib/components/card/card.svelte';
 	import History from '$lib/components/history/history.svelte';
-	import { updateCode, updateConfig, codeStore, serializedState } from '$lib/util/state';
+	import {
+		updateCode,
+		updateConfig,
+		codeStore,
+		serializedState,
+		updateStyle
+	} from '$lib/util/state';
 	import { initHandler, syncDiagram } from '$lib/util/util';
 	import { errorStore } from '$lib/util/error';
 	import { onMount } from 'svelte';
@@ -17,12 +23,13 @@
 
 	serializedState; // Weird fix for error > serializedState is not defined. Treeshaking?
 
-	type Modes = 'code' | 'config';
-	type Languages = 'mermaid' | 'json';
+	type Modes = 'code' | 'style' | 'config';
+	type Languages = 'mermaid' | 'stylesheet' | 'json';
 
 	let selectedMode: Modes = 'code';
 	const languageMap: { [key in Modes]: Languages } = {
 		code: 'mermaid',
+		style: 'stylesheet',
 		config: 'json'
 	};
 	const docURLBase = 'https://mermaid-js.github.io/mermaid';
@@ -73,6 +80,8 @@
 	$: {
 		if (selectedMode === 'code') {
 			text = $codeStore.code;
+		} else if (selectedMode === 'style') {
+			text = $codeStore.style;
 		} else {
 			text = $codeStore.mermaid;
 		}
@@ -90,7 +99,7 @@
 		}
 	});
 	const tabSelectHandler = (message: CustomEvent<Tab>) => {
-		selectedMode = message.detail.id === 'code' ? 'code' : 'config';
+		selectedMode = message.detail.id as Modes;
 		$codeStore.updateEditor = true;
 	};
 	const tabs: Tab[] = [
@@ -98,6 +107,11 @@
 			id: 'code',
 			title: 'Code',
 			icon: 'fas fa-code'
+		},
+		{
+			id: 'style',
+			title: 'Style',
+			icon: 'fas fa-paint-brush'
 		},
 		{
 			id: 'config',
@@ -111,6 +125,10 @@
 		updateCode(code, false);
 	};
 
+	const handleStyleUpdate = (style: string): void => {
+		updateStyle(style, false);
+	};
+
 	const handleConfigUpdate = (config: string): void => {
 		JSON.parse(config);
 		updateConfig(config, false);
@@ -120,6 +138,8 @@
 		try {
 			if (selectedMode === 'code') {
 				handleCodeUpdate(message.detail.text);
+			} else if (selectedMode === 'style') {
+				handleConfigUpdate(message.detail.text);
 			} else {
 				handleConfigUpdate(message.detail.text);
 			}
